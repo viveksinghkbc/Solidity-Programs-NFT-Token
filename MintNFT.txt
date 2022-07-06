@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.7.0 <0.9.0;
+
+//how many NFT tokens are made
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+//add metadata to images
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+//for making NFT tokens
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+//SafeMath is a solidity math library especially designed to support safe math operations:
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+contract MinterSANDIP is ERC721, ERC721Enumerable, ERC721URIStorage {
+    using SafeMath for uint256;
+    uint public constant mintPrice = 0;
+
+    //send tokens to registered address only
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId) 
+    //inernal functions are not visible while running a smart contract functions
+    internal
+    // You can inherit from a base contract and then override a function in that base contract.
+    override(ERC721, ERC721Enumerable)
+    {
+        //Super keyword gives access to the immediate parent contract from which the current contract is derived.
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    //burn tokens is to sent them to the zero-address. This also triggers the Transfer event that is associated to burning.
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+        super._burn(tokenId);
+    } 
+
+    //tokenURI function takes a tokenId as its only argument, and returns a URI which points to metadata about that specific token.
+    //All NFTs have a uint256 variable called tokenId, so for any ERC-721 Contract, 
+    //the pair contract address, uint256 tokenId must be globally unique. 
+    //That said, a dApp can have a "converter" that uses the tokenId as input and outputs an image of something cool, like zombies, weapons, skills or amazing kitties!
+    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage)
+    returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+    constructor() ERC721("MinterSANDIP", "SAN") {}
+    function mint(string memory _uri) public payable {
+        uint256 mintIndex = totalSupply();
+        _safeMint(msg.sender, mintIndex);
+        _setTokenURI(mintIndex, _uri);
+    }
+}

@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: GPL-3.0
+
+pragma solidity >=0.7.0 <0.9.0;
+
+import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+
+//Inherit contract ERC721 and Ownable
+contract SimpleMintContract is ERC721, Ownable {
+    uint256 public mintPrice = 0.005 ether;
+    uint256 public totalSupply;
+    uint256 public maxSupply;
+    bool public isMintEnabled;
+    //Like object in JS, it's a hash table that stores data as key-value pairs,
+    mapping(address => uint256) public mintedWallets;
+
+    //ERC721 constructor, minting token with the name Simple Mint and symbol as SIMPLEMINTTOKEN 
+    constructor() payable ERC721 ('Simple Mint','SIMPLEMINTTOKEN'){
+        maxSupply = 2;
+    }
+
+    // External functions are meant to be called by other contracts.
+    function toggleIsMintEnabled() external onlyOwner{
+        isMintEnabled = !isMintEnabled;
+    }
+    
+    //Owners are the only one who can modify this contract, Ownable contract has an owner address,
+    //no one can modifiy max suppply apart from owner
+    function setMaxSuppky(uint256 maxSupply_) external onlyOwner{
+        maxSupply = maxSupply_;
+    }
+
+    //payable- its gonna deal with actual money, not gas fees, ethers for performing some functionality
+    function mint() external payable{
+        //require acts like if-else statement in JS
+        require (isMintEnabled, 'mint not enabled');
+        //one wallet can mint only once, msg.sender is sender's address
+        require (mintedWallets[msg.sender] < 1, 'exceeds max per wallet');
+        require (msg.value == mintPrice, 'wrong value');
+        require (maxSupply > totalSupply, 'sold out');
+
+        mintedWallets[msg.sender]++;
+        totalSupply++;
+        uint256 tokenId = totalSupply;
+        //safemint fucntion from ERC721
+        _safeMint(msg.sender,tokenId);
+    }
+}
